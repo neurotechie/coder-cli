@@ -149,5 +149,83 @@ describe("OpenAIClient", () => {
         "OpenAI API rate limit exceeded"
       );
     });
+
+    test("should not include temperature for o4-mini model", async () => {
+      // Setup axios mock response
+      const mockResponse = {
+        data: {
+          id: "test-id",
+          object: "chat.completion",
+          created: Date.now(),
+          model: "o4-mini",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "This is a test response",
+              },
+              finish_reason: "stop",
+            },
+          ],
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 5,
+            total_tokens: 15,
+          },
+        },
+      };
+
+      mockedAxios.post.mockResolvedValue(mockResponse);
+
+      // Call the method
+      const request = {
+        prompt: "Test prompt",
+        model: "o4-mini",
+        temperature: 0.7, // This should be ignored for o4-mini
+        maxTokens: 100,
+      };
+
+      // Access the protected method for testing
+      const result = await (openAIClient as any).makeRequest(request);
+
+      // Verify the result format
+      expect(result).toEqual({
+        content: "This is a test response",
+        tokenUsage: {
+          prompt: 10,
+          completion: 5,
+          total: 15,
+        },
+        model: "o4-mini",
+        id: "test-id",
+      });
+
+      // Verify the axios call - temperature should NOT be included
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "o4-mini",
+          messages: [
+            {
+              role: "user",
+              content: "Test prompt",
+            },
+          ],
+          max_tokens: 100,
+          // temperature should not be present
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+        }
+      );
+
+      // Specifically check that temperature is not included
+      const requestBody = mockedAxios.post.mock.calls[0][1];
+      expect(requestBody).not.toHaveProperty("temperature");
+    });
   });
 });
