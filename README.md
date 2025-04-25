@@ -52,8 +52,23 @@ A Node.js command-line interface (CLI) tool designed to replicate the core task-
    ```
 
 5. Build the project:
+
    ```bash
    npm run build
+   ```
+
+6. For development, you can use npm link to make the CLI available globally:
+
+   ```bash
+   # Inside the coder-cli directory, run:
+   npm link
+
+   # This creates a symlink to your local package
+   # You can now run the command from anywhere:
+   coder-cli "Your task here"
+
+   # To unlink when done:
+   npm unlink coder-cli
    ```
 
 ## Usage
