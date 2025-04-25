@@ -255,3 +255,217 @@ For details on the next phase (**Phase 3: Basic Agent Loop & LLM Integration**),
 4. **Multi-Session Support**: Enable saving and resuming agent sessions.
 
 5. **Collaborative Mode**: Allow multiple users to interact with the same agent session.
+
+## Phase 3 Implementation: Basic Agent Loop & LLM Integration (NEARLY COMPLETE)
+
+Based on the completion of Phases 1 and 2, we are now moving to Phase 3 which focuses on implementing the basic agent loop and LLM integration. This phase will provide the foundation for the AI-driven planning and execution cycle.
+
+### Components to Implement
+
+1. **AgentController** (`src/core/AgentController.ts`)
+
+   - **History Management**
+
+     - Implement conversation history tracking with distinct types for plans, actions, and observations
+     - Create methods for adding to history and retrieving history items
+     - Add support for history truncation to manage context size
+
+   - **Basic Loop Structure**
+     - Implement the main agent loop with iteration tracking
+     - Add termination conditions (max iterations, goal completion)
+     - Create state management for tracking current subtasks
+     - Build error handling and recovery mechanisms
+
+2. **LLM Client** (`src/llm/LLMClient.ts`)
+
+   - **Core Functionality**
+
+     - Create abstract base class for LLM interactions
+     - Implement authentication and API key management
+     - Add prompt sending functionality with rate limiting
+     - Build response parsing and error handling
+
+   - **Provider Implementation**
+     - Implement specific provider (e.g., OpenAI) in `src/llm/providers/OpenaiClient.ts`
+     - Add provider-specific authentication and API calls
+     - Create provider-specific response formatting
+
+3. **Tokenizer** (`src/llm/Tokenizer.ts`)
+
+   - Implement token counting functionality based on LLM model
+   - Add methods for estimating prompt token usage
+   - Create utilities for context window management
+   - Provide helper functions for truncating content to fit token limits
+
+4. **Integration**
+
+   - Connect `AgentController` with `LLMClient` and `ActionExecutor`
+   - Implement single-step execution flow (without planning yet)
+   - Create mockable interfaces for testing
+   - Add basic JSON parsing for LLM responses
+
+### Testing Strategy
+
+1. **Unit Tests**
+
+   - **LLMClient Tests**
+
+     - Test prompt construction and sending (with mocked API)
+     - Verify error handling for API failures
+     - Test rate limiting functionality
+     - Validate response parsing
+
+   - **Tokenizer Tests**
+
+     - Verify accurate token counting for different models
+     - Test truncation functionality
+     - Validate context fitting logic
+
+   - **AgentController Tests**
+     - Test history management
+     - Verify state transitions
+     - Test termination conditions
+     - Validate error handling
+
+2. **Integration Tests**
+
+   - Test the complete one-step flow:
+     - Prompt generation → Mock LLM → Response parsing → Action execution → History update
+   - Verify proper interfaces between components
+   - Test error propagation through the system
+
+### Acceptance Criteria
+
+- `LLMClient` can send prompts with proper authentication (verified with mocked API)
+- `Tokenizer` accurately estimates token usage for prompts
+- `AgentController` formats basic prompts and parses responses
+- One complete iteration of: send prompt → receive (mocked) response → parse → execute action → update history
+- All components have comprehensive unit tests with good coverage
+- Integration tests verify the complete flow
+
+### Security Considerations
+
+1. **API Key Management**
+
+   - Implement secure loading of API keys from environment variables/config
+   - Never log or expose API keys in output or error messages
+   - Add validation to ensure keys are properly configured
+
+2. **Input Validation**
+
+   - Validate all LLM responses before processing
+   - Implement thorough JSON parsing with error handling
+   - Add schema validation for action requests from LLM
+
+3. **Error Handling**
+   - Implement graceful handling of API failures
+   - Add retry logic with appropriate backoff
+   - Provide clear error messages without exposing sensitive information
+
+### Progress Tracking
+
+- [x] Set up directory structure for new components
+- [x] Implement `AgentController` basic structure and history management
+- [x] Create `LLMClient` abstract class and provider implementation
+- [x] Implement `Tokenizer` with model-specific token counting
+- [x] Connect components for basic one-step execution
+- [x] Write unit tests for all new components
+- [x] Create integration tests for the complete flow
+- [x] Update documentation with new component details
+
+### Implementation Details
+
+1. **Tokenizer (`src/llm/Tokenizer.ts`)**
+
+   We've implemented a token counter utility that provides:
+
+   - Accurate token counting for different models
+   - Context window management with model-specific limits
+   - Utilities for truncating content to fit within token limits
+   - Helper methods to check if text fits within a context window
+
+2. \*\*LLM Client (`src/llm/LLMClient.ts`)
+
+   The abstract LLMClient class:
+
+   - Provides a common interface for all LLM providers
+   - Handles rate limiting via the RateLimiter utility
+   - Includes error handling for API failures
+   - Contains JSON parsing helpers for structured LLM responses
+   - Tracks token usage for prompts and completions
+
+3. \*\*OpenAI Provider (`src/llm/providers/OpenAIClient.ts`)
+
+   We've implemented an OpenAI-specific client that:
+
+   - Handles authentication with the OpenAI API
+   - Formats requests according to OpenAI's Chat API specifications
+   - Parses responses into a standardized format
+   - Provides specialized error handling for rate limits and other API errors
+
+4. \*\*Agent Controller (`src/core/AgentController.ts`)
+
+   The core agent component:
+
+   - Manages the main agent loop (currently single-step)
+   - Implements history tracking for actions and observations
+   - Creates formatted prompts for the LLM
+   - Handles JSON parsing for action specifications
+   - Executes actions via the ActionExecutor
+   - Implements termination conditions (finish action, max iterations)
+
+5. **CLI Integration**
+
+   Updated the main CLI entry point to:
+
+   - Support both direct action mode and agent mode
+   - Initialize the appropriate components based on user input
+   - Handle errors gracefully with informative messages
+
+### Next Steps for Phase 3
+
+1. **Testing Improvements**
+
+   - Create integration tests with mocked LLM responses
+   - Test the complete flow from user task to action execution
+   - Add more edge case handling tests
+
+2. **Refine LLM Integration**
+
+   - Enhance the prompt building with more context information
+   - Improve error handling for malformed LLM responses
+   - Add more detailed logging of token usage
+
+3. **Package Dependencies**
+   - Ensure all necessary dependencies are in package.json
+   - Add the gpt-3-encoder package for token counting
+
+### Next Steps
+
+Phase 3 implementation is nearly complete. The remaining tasks include:
+
+1. **Final Testing and Review**
+
+   - Run all tests and ensure they pass
+   - Check for edge cases in error handling
+   - Perform manual testing of the agent loop with actual LLM integration
+
+2. **Package Installation and Verification**
+
+   - Install the gpt-3-encoder package for token counting: `npm install gpt-3-encoder`
+   - Verify all dependencies are correctly installed
+
+3. **Configuration Enhancement**
+   - Finalize OpenAI API integration with proper error handling
+   - Implement environment variable validation for API keys
+
+### Transition to Phase 4
+
+Once Phase 3 is fully completed and tested, we will move on to Phase 4: Plan/Execute Cycle & Prompt Strategy. This will involve:
+
+1. Splitting the agent loop into distinct planning and execution phases
+2. Creating specialized prompts for each phase
+3. Implementing improved history management and context window handling
+4. Adding more sophisticated prompt strategies for better LLM guidance
+
+The foundation we've built in Phase 3 provides a robust base for these enhancements.

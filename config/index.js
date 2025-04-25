@@ -6,12 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadConfig = loadConfig;
 // Configuration loader for the application
 const dotenv_1 = __importDefault(require("dotenv"));
-// Load environment variables from .env file
-dotenv_1.default.config();
+const path_1 = __importDefault(require("path"));
+// Find the package root directory and load environment variables from .env file
+const packageRoot = path_1.default.resolve(__dirname, "..");
+dotenv_1.default.config({ path: path_1.default.resolve(packageRoot, ".env") });
 // Default configuration values
 const defaultConfig = {
-    llmApiKey: '',
-    llmModel: 'gpt-4',
+    llmApiKey: "",
+    llmModel: "gpt-4",
     rateLimitBaseDelay: 1000, // 1 second
     rateLimitMaxRetries: 5,
     fileChunkSize: 1000, // lines
@@ -35,7 +37,8 @@ function loadConfig(cliArgs = {}) {
     if (process.env.MAX_ITERATIONS)
         config.maxIterations = parseInt(process.env.MAX_ITERATIONS, 10);
     if (process.env.CONFIRM_ACTIONS)
-        config.confirmActions = process.env.CONFIRM_ACTIONS.toLowerCase() === 'true';
+        config.confirmActions =
+            process.env.CONFIRM_ACTIONS.toLowerCase() === "true";
     // Override with CLI arguments
     if (cliArgs.llmApiKey)
         config.llmApiKey = cliArgs.llmApiKey;
